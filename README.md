@@ -76,23 +76,23 @@ Report the preflight results to the user in a short table (check, result, detail
 ### Install
 
 7. **Fetch the repo** into a temporary folder (use the system temp directory; on Windows `/tmp` may not exist):
-```bash
+   ```bash
    git clone --depth 1 https://github.com/SamehAbdelAlYoussef/odoo19-agent-skills.git <temp>/odoo19-agent-skills
-```
+   ```
    If the clone fails, stop and report the error.
 
 8. **Install the skills.** Copy the four folders inside `<temp>/odoo19-agent-skills/skills/` (`odoo-guidelines`, `odoo-web-guidelines`, `odoo-review`, `odoo-security`) into `.claude/skills/` at the project root (create it if needed). If a skill with the same name already exists there, first move the old one to `.claude/skills-backup-<YYYYMMDD-HHMM>/`. Copy nothing else: not `upstream/`, not any README.
 
 9. **Enable automatic use.** Create `CLAUDE.md` at the project root if it does not exist. If it does not already contain a `## Odoo skills` section, append this section verbatim, filling in the detected version:
 
-```markdown
+   ```markdown
    ## Odoo skills
    - This project targets Odoo <detected version, e.g. 19.0>. When a skill rule conflicts with the Odoo source in this workspace, the source wins.
    - Access rights in Odoo 19 use ir.model.access.csv + ir.rule. ir.access does not exist in 19.
    - Before writing or editing any file in an Odoo addon, read the matching sections of the odoo-guidelines skill (or odoo-web-guidelines for anything under static/). Only read the sections relevant to the files being touched.
    - After finishing any code change, run the odoo-review skill on the diff and fix blocking findings before reporting the task as done.
    - For anything involving sudo(), raw SQL, controllers/routes, public or RPC-callable methods, or access rights, also apply the odoo-security skill.
-```
+   ```
 
    If a `## Odoo skills` section already exists, leave it unchanged and tell the user.
 
