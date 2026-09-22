@@ -55,20 +55,35 @@ LICENSE
 
 ## Installation instructions for Claude
 
-These steps are for an AI coding agent (Claude Code or similar) installing the skills into the project it is running in. Follow them in order.
+These steps are for an AI coding agent (Claude Code or similar) installing the skills into the project it is running in. Run the preflight checks first. **If any check marked STOP fails, do not install anything**: tell the user which check failed, what you found, and how to fix it, then end.
 
-1. **Confirm the target.** The current working directory is the target project. Check it is an Odoo project (addons with `__manifest__.py` files). If the Odoo source is present (`odoo/release.py`), read the version; if it is not 19.x, warn the user that these skills are adapted for 19.0 and ask whether to continue.
+### Preflight checks
 
-2. **Fetch the repo** into a temporary folder:
+1. **Odoo source present (STOP).** Look for `odoo/release.py` in the current working directory, or at most two folder levels below it. If none is found, stop: tell the user to open Claude Code at the root of their Odoo 19 project (the folder containing the Odoo source and their addons).
+
+2. **Odoo version is 19 (STOP).** Read `version_info` from the `release.py` found. If its first element is not `19`, stop: tell the user which version was found and that these skills are adapted for Odoo 19 only.
+
+3. **Working directory is the project root (STOP).** The current working directory must be the folder that contains the Odoo source (or its parent project folder), not a subfolder such as a single addon, `odoo/`, or `addons/`. If the current directory is inside the Odoo source or inside an addon, stop and tell the user which folder to open Claude Code in instead.
+
+4. **Git available (STOP).** Run `git --version`. If git is missing, stop and tell the user to install git.
+
+5. **Addons present (warning only).** Find addon folders (containing `__manifest__.py`) outside the Odoo core source. If none are found, warn the user but continue. If any have a manifest `version` that clearly targets another major version (e.g. starts with `17.0` or `18.0`), list them in the report.
+
+6. **Existing install (info).** Note whether `.claude/skills/` already contains any of the four skill names and whether `CLAUDE.md` already has a `## Odoo skills` section. These are handled below, not blockers.
+
+Report the preflight results to the user in a short table (check, result, details) before continuing.
+
+### Install
+
+7. **Fetch the repo** into a temporary folder (use the system temp directory; on Windows `/tmp` may not exist):
 ```bash
-   git clone --depth 1 https://github.com/SamehAbdelAlYoussef/odoo19-agent-skills.git /tmp/odoo19-agent-skills
+   git clone --depth 1 https://github.com/SamehAbdelAlYoussef/odoo19-agent-skills.git <temp>/odoo19-agent-skills
 ```
+   If the clone fails, stop and report the error.
 
-3. **Install the skills.** Copy every folder inside `/tmp/odoo19-agent-skills/skills/` into `.claude/skills/` at the project root (create it if needed). If a skill with the same name already exists there, move the old one to `.claude/skills-backup-<date>/` first and tell the user. Do not copy `upstream/`.
+8. **Install the skills.** Copy the four folders inside `<temp>/odoo19-agent-skills/skills/` (`odoo-guidelines`, `odoo-web-guidelines`, `odoo-review`, `odoo-security`) into `.claude/skills/` at the project root (create it if needed). If a skill with the same name already exists there, first move the old one to `.claude/skills-backup-<YYYYMMDD-HHMM>/`. Copy nothing else: not `upstream/`, not any README.
 
-4. **Check the skills load.** Each `.claude/skills/<name>/SKILL.md` must start with a valid YAML frontmatter block (`---` / `name:` / `description:` / `---`). Confirm all four are present and valid.
-
-5. **Enable automatic use.** Create `CLAUDE.md` at the project root if it does not exist. If it does not already contain a `## Odoo skills` section, append this section verbatim, filling in the detected version:
+9. **Enable automatic use.** Create `CLAUDE.md` at the project root if it does not exist. If it does not already contain a `## Odoo skills` section, append this section verbatim, filling in the detected version:
 
 ```markdown
    ## Odoo skills
@@ -79,11 +94,15 @@ These steps are for an AI coding agent (Claude Code or similar) installing the s
    - For anything involving sudo(), raw SQL, controllers/routes, public or RPC-callable methods, or access rights, also apply the odoo-security skill.
 ```
 
-   If a `## Odoo skills` section already exists, leave it as is and tell the user.
+   If a `## Odoo skills` section already exists, leave it unchanged and tell the user.
 
-6. **Clean up** `/tmp/odoo19-agent-skills`.
+### Verify
 
-7. **Report** to the user: the version detected, the four skills installed, whether `CLAUDE.md` was created or updated, any backups made. Then tell them to restart the session (`/exit`, then start again) so the skills and `CLAUDE.md` are loaded.
+10. **Check the install.** All four `.claude/skills/<name>/SKILL.md` files exist and each starts with a valid YAML frontmatter block (`---`, `name:`, `description:`, `---`), and `CLAUDE.md` contains the `## Odoo skills` section. If anything is wrong, fix it by recopying from the temp clone; if it still fails, report it.
+
+11. **Clean up** the temp clone.
+
+12. **Report:** the Odoo version and project root detected, the four skills installed, whether `CLAUDE.md` was created or updated, any backups made, and any warnings from preflight. Then tell the user: "Exit this session (`/exit`) and start Claude Code again in this same folder. The skills become active on the next session."
 
 Do not modify the skill files during installation.
 
